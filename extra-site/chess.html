@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chess — Silika Extras</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .chess-container { max-width: 520px; margin: 40px auto; text-align: center; }
+    .board { display: grid; grid-template-columns: repeat(8, 60px); gap: 0; margin: 0 auto; border: 4px solid #111; }
+    .square { width: 60px; height: 60px; display:flex; align-items:center; justify-content:center; font-size:34px; cursor:pointer; user-select:none; }
+    .square.light { background: #f0d9b5; }
+    .square.dark { background: #b58863; }
+    .square.highlight { outline: 3px solid rgba(0,255,204,0.6); }
+    .controls { margin-top: 16px; display:flex; gap:10px; justify-content:center; }
+    .moves { margin-top: 18px; max-width:520px; margin-left:auto; margin-right:auto; text-align:left; padding:8px 12px; background:#111; border-radius:8px; color:#eaeaea; }
+    .status { margin-top:10px; color:#00ffcc; }
+    @media (max-width:520px){ .board { transform: scale(0.9); transform-origin: top center; } }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <h1>Silika — Chess</h1>
+      <div>
+        <a href="../index.html">Main Site</a>
+        <a href="index.html">Extras</a>
+      </div>
+    </nav>
+  </header>
+
+  <div class="chess-container">
+    <div id="board" class="board" aria-label="Chess board"></div>
+
+    <div class="controls">
+      <button id="btnNew">New Game</button>
+      <button id="btnUndo">Undo</button>
+      <button id="btnFlip">Flip Board</button>
+    </div>
+
+    <div class="status" id="status">Loading game...</div>
+    <div class="moves" id="moves"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+  <script>
+    // Chess UI using chess.js for rules and Unicode piece glyphs for visuals
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const movesEl = document.getElementById('moves');
+    const btnNew = document.getElementById('btnNew');
+    const btnUndo = document.getElementById('btnUndo');
+    const btnFlip = document.getElementById('btnFlip');
+
+    const glyphs = {
+      p: { w: '♙', b: '♟' },
+      r: { w: '♖', b: '♜' },
+      n: { w: '♘', b: '♞' },
+      b: { w: '♗', b: '♝' },
+      q: { w: '♕', b: '♛' },
+      k: { w: '♔', b: '♚' }
+    };
+
+    let game = new Chess();
+    let selected = null;
+    let flipped = false;
+
+    const files = ['a','b','c','d','e','f','g','h'];
+
+    function coordToSquare(fileIndex, rank){
+      return files[fileIndex] + rank;
+    }
+
+    function render(){
+      boardEl.innerHTML = '';
+      const board = game.board(); // array rank 8 -> 1
+      // we render from rank 8 to 1, file a->h unless flipped
+      for(let r = 8; r >= 1; r--){
+        for(let f = 0; f < 8; f++){
+          const fileIndex = flipped ? 7 - f : f;
+          const rank = r;
+          const sq = coordToSquare(fileIndex, rank);
+          const pieceObj = game.get(sq);
+
+          const div = document.createElement('div');
+          div.className = 'square ' + (((fileIndex + rank) % 2 === 0) ? 'light' : 'dark');
+          div.dataset.square = sq;
+          if(pieceObj){
+            const glyph = glyphs[pieceObj.type][pieceObj.color === 'w' ? 'w' : 'b'];
+            div.textContent = glyph;
+            div.setAttribute('aria-label', pieceObj.color + ' ' + pieceObj.type + ' on ' + sq);
+          }
+          div.addEventListener('click', onSquareClick);
+          boardEl.appendChild(div);
+        }
+      }
+
+      updateStatus();
+      renderMoves();
+    }
+
+    function onSquareClick(e){
+      const sq = e.currentTarget.dataset.square;
+
+      // if nothing selected yet
+      if(!selected){
+        const piece = game.get(sq);
+        if(piece){
+          selected = sq;
+          highlightMoves(sq);
+        }
+        return;
+      }
+
+      // if clicked same square -> deselect
+      if(selected === sq){
+        clearHighlights();
+        selected = null;
+        return;
+      }
+
+      // try to make move
+      const move = game.move({ from: selected, to: sq, promotion: 'q' });
+      if(move){
+        selected = null;
+        clearHighlights();
+        render();
+      } else {
+        // if clicked another piece of same color, change selection
+        const piece = game.get(sq);
+        const selPiece = game.get(selected);
+        if(piece && selPiece && piece.color === selPiece.color){
+          selected = sq;
+          highlightMoves(sq);
+        }
+      }
+    }
+
+    function highlightMoves(sq){
+      clearHighlights();
+      const moves = game.moves({ square: sq, verbose: true });
+      const squares = document.querySelectorAll('.square');
+      squares.forEach(s => {
+        if(s.dataset.square === sq) s.classList.add('highlight');
+      });
+      moves.forEach(m => {
+        const el = document.querySelector('.square[data-square="' + m.to + '"]');
+        if(el) el.classList.add('highlight');
+      });
+    }
+
+    function clearHighlights(){
+      document.querySelectorAll('.square.highlight').forEach(el => el.classList.remove('highlight'));
+    }
+
+    function updateStatus(){
+      if(game.in_checkmate()){
+        statusEl.textContent = 'Checkmate — ' + (game.turn() === 'w' ? 'Black' : 'White') + ' wins';
+      } else if(game.in_draw()){
+        statusEl.textContent = 'Draw';
+      } else {
+        statusEl.textContent = (game.turn() === 'w' ? 'White' : 'Black') + " to move" + (game.in_check() ? ' — Check' : '');
+      }
+    }
+
+    function renderMoves(){
+      const history = game.history({ verbose: true });
+      if(history.length === 0){
+        movesEl.textContent = 'No moves yet.';
+        return;
+      }
+      // render as simple list
+      let html = '';
+      for(let i=0;i<history.length;i+=2){
+        const moveNum = (i/2)+1;
+        const w = history[i] ? history[i].san : '';
+        const b = history[i+1] ? history[i+1].san : '';
+        html += `<div><strong>${moveNum}.</strong> ${w} ${b}</div>`;
+      }
+      movesEl.innerHTML = html;
+    }
+
+    btnNew.addEventListener('click', () => { game = new Chess(); selected = null; render(); });
+    btnUndo.addEventListener('click', () => { game.undo(); selected = null; render(); });
+    btnFlip.addEventListener('click', () => { flipped = !flipped; render(); });
+
+    // init
+    render();
+  </script>
+</body>
+</html>
