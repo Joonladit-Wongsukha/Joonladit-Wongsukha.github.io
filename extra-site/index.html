@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Extra Site — Silika</title>
   <link rel="stylesheet" href="../style.css">
+  <style>
+    /* Entrance animation for Prototype A */
+    .card.prototype-a {
+      animation: fadeInUp 0.8s ease-out 0.1s both;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .card.prototype-a:hover { transform: translateY(-6px) scale(1.02); }
+  </style>
 </head>
 <body>
   <header>
@@ -26,10 +37,10 @@
   <section id="more">
     <h2>Extra Projects & Notes</h2>
     <div class="projects">
-      <div class="card">
+      <a class="card prototype-a" href="chess.html">
         <h3>Prototype A</h3>
-        <p>Short demo or notes about additional projects.</p>
-      </div>
+        <p>Playable chess demo — click to open the game.</p>
+      </a>
       <div class="card">
         <h3>Prototype B</h3>
         <p>Another demo or link placeholder.</p>
