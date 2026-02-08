@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extra Site — Silika</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <h1>Silika — Extras</h1>
+      <div>
+        <a href="../index.html">Main Site</a>
+        <a href="#more">More</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>Welcome to the Extras</h2>
+    <p>This is a small companion site linked from the main portfolio. Use the link above to return.</p>
+  </section>
+
+  <section id="more">
+    <h2>Extra Projects & Notes</h2>
+    <div class="projects">
+      <div class="card">
+        <h3>Prototype A</h3>
+        <p>Short demo or notes about additional projects.</p>
+      </div>
+      <div class="card">
+        <h3>Prototype B</h3>
+        <p>Another demo or link placeholder.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Silika — Extras</p>
+  </footer>
+
+  <script>
+    // Simple script to highlight that this page is linked
+    document.addEventListener('DOMContentLoaded', () => {
+      const links = document.querySelectorAll('a[href]');
+      links.forEach(a => a.addEventListener('click', () => {
+        // no-op, just a placeholder for analytics or behavior
+      }));
+    });
+  </script>
+</body>
+</html>
