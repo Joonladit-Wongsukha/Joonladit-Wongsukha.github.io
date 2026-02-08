@@ -14,6 +14,9 @@
     .square.highlight { outline: 3px solid rgba(0,255,204,0.6); }
     .piece { width: 56px; height: 56px; object-fit: contain; }
     .controls { margin-top: 16px; display:flex; gap:10px; justify-content:center; }
+    .controls button { padding: 8px 16px; background: #00ffcc; color: #0f0f0f; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.3s ease; }
+    .controls button:hover { background: #00e5b8; transform: translateY(-2px); }
+    .controls button:active { transform: translateY(0); }
     .moves { margin-top: 18px; max-width:520px; margin-left:auto; margin-right:auto; text-align:left; padding:8px 12px; background:#111; border-radius:8px; color:#eaeaea; }
     .status { margin-top:10px; color:#00ffcc; }
     @media (max-width:520px){ .board { transform: scale(0.9); transform-origin: top center; } }
@@ -43,9 +46,14 @@
     <div class="moves" id="moves"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script>
-    // Chess UI using chess.js for rules and Unicode piece glyphs for visuals
+    // Check if chess.js loaded
+    if (typeof Chess === 'undefined') {
+      document.getElementById('status').textContent = 'Error: Chess library failed to load. Check internet connection.';
+    }
+    
+    // Chess UI using chess.js for rules and local piece images
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
     const movesEl = document.getElementById('moves');
@@ -78,33 +86,43 @@
     }
 
     function render(){
-      boardEl.innerHTML = '';
-      const board = game.board(); // array rank 8 -> 1
-      // we render from rank 8 to 1, file a->h unless flipped
-      for(let r = 8; r >= 1; r--){
-        for(let f = 0; f < 8; f++){
-          const fileIndex = flipped ? 7 - f : f;
-          const rank = r;
-          const sq = coordToSquare(fileIndex, rank);
-          const pieceObj = game.get(sq);
-
-          const div = document.createElement('div');
-          div.className = 'square ' + (((fileIndex + rank) % 2 === 0) ? 'light' : 'dark');
-          div.dataset.square = sq;
-          if(pieceObj){
-            const img = document.createElement('img');
-            img.src = getPieceImageUrl(pieceObj.type, pieceObj.color);
-            img.className = 'piece';
-            img.alt = pieceObj.color + ' ' + pieceObj.type;
-            div.appendChild(img);
-          }
-          div.addEventListener('click', onSquareClick);
-          boardEl.appendChild(div);
+      try {
+        boardEl.innerHTML = '';
+        const board = game.board(); // array rank 8 -> 1
+        if (!board || board.length === 0) {
+          console.error('Board not initialized');
+          return;
         }
-      }
+        
+        // we render from rank 8 to 1, file a->h unless flipped
+        for(let r = 8; r >= 1; r--){
+          for(let f = 0; f < 8; f++){
+            const fileIndex = flipped ? 7 - f : f;
+            const rank = r;
+            const sq = coordToSquare(fileIndex, rank);
+            const pieceObj = game.get(sq);
 
-      updateStatus();
-      renderMoves();
+            const div = document.createElement('div');
+            div.className = 'square ' + (((fileIndex + rank) % 2 === 0) ? 'light' : 'dark');
+            div.dataset.square = sq;
+            if(pieceObj){
+              const img = document.createElement('img');
+              img.src = getPieceImageUrl(pieceObj.type, pieceObj.color);
+              img.className = 'piece';
+              img.alt = pieceObj.color + ' ' + pieceObj.type;
+              img.onerror = () => console.warn('Failed to load:', img.src);
+              div.appendChild(img);
+            }
+            div.addEventListener('click', onSquareClick);
+            boardEl.appendChild(div);
+          }
+        }
+
+        updateStatus();
+        renderMoves();
+      } catch(e) {
+        console.error('Render error:', e);
+      }
     }
 
     function onSquareClick(e){
@@ -188,12 +206,17 @@
       movesEl.innerHTML = html;
     }
 
-    btnNew.addEventListener('click', () => { game = new Chess(); selected = null; render(); });
-    btnUndo.addEventListener('click', () => { game.undo(); selected = null; render(); });
+    btnNew.addEventListener('click', () => { game = new Chess(); selected = null; clearHighlights(); render(); });
+    btnUndo.addEventListener('click', () => { game.undo(); selected = null; clearHighlights(); render(); });
     btnFlip.addEventListener('click', () => { flipped = !flipped; render(); });
 
     // init
-    render();
+    try {
+      render();
+    } catch(e) {
+      console.error('Chess game error:', e);
+      statusEl.textContent = 'Error starting game: ' + e.message;
+    }
   </script>
 </body>
 </html>
