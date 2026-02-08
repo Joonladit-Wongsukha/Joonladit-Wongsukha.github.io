@@ -54,17 +54,17 @@
     const btnFlip = document.getElementById('btnFlip');
 
     const glyphs = {
-      p: { w: 'wp', b: 'bp' },
-      r: { w: 'wr', b: 'br' },
-      n: { w: 'wn', b: 'bn' },
-      b: { w: 'wb', b: 'bb' },
-      q: { w: 'wq', b: 'bq' },
-      k: { w: 'wk', b: 'bk' }
+      p: { w: 'white-pawn', b: 'black-pawn' },
+      r: { w: 'white-rook', b: 'black-rook' },
+      n: { w: 'white-knight', b: 'black-knight' },
+      b: { w: 'white-bishop', b: 'black-bishop' },
+      q: { w: 'white-queen', b: 'black-queen' },
+      k: { w: 'white-king', b: 'black-king' }
     };
 
     function getPieceImageUrl(type, color) {
       const piece = glyphs[type][color === 'w' ? 'w' : 'b'];
-      return `https://images.chesscomfiles.com/chess-themes/pieces/merida/${piece}.png`;
+      return `./pieces-basic-png/${piece}.png`;
     }
 
     let game = new Chess();
