@@ -8,10 +8,11 @@
   <style>
     .chess-container { max-width: 520px; margin: 40px auto; text-align: center; }
     .board { display: grid; grid-template-columns: repeat(8, 60px); gap: 0; margin: 0 auto; border: 4px solid #111; }
-    .square { width: 60px; height: 60px; display:flex; align-items:center; justify-content:center; font-size:34px; cursor:pointer; user-select:none; }
+    .square { width: 60px; height: 60px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; position: relative; }
     .square.light { background: #f0d9b5; }
     .square.dark { background: #b58863; }
     .square.highlight { outline: 3px solid rgba(0,255,204,0.6); }
+    .piece { width: 56px; height: 56px; object-fit: contain; }
     .controls { margin-top: 16px; display:flex; gap:10px; justify-content:center; }
     .moves { margin-top: 18px; max-width:520px; margin-left:auto; margin-right:auto; text-align:left; padding:8px 12px; background:#111; border-radius:8px; color:#eaeaea; }
     .status { margin-top:10px; color:#00ffcc; }
@@ -53,13 +54,18 @@
     const btnFlip = document.getElementById('btnFlip');
 
     const glyphs = {
-      p: { w: '♙', b: '♟' },
-      r: { w: '♖', b: '♜' },
-      n: { w: '♘', b: '♞' },
-      b: { w: '♗', b: '♝' },
-      q: { w: '♕', b: '♛' },
-      k: { w: '♔', b: '♚' }
+      p: { w: 'wp', b: 'bp' },
+      r: { w: 'wr', b: 'br' },
+      n: { w: 'wn', b: 'bn' },
+      b: { w: 'wb', b: 'bb' },
+      q: { w: 'wq', b: 'bq' },
+      k: { w: 'wk', b: 'bk' }
     };
+
+    function getPieceImageUrl(type, color) {
+      const piece = glyphs[type][color === 'w' ? 'w' : 'b'];
+      return `https://images.chesscomfiles.com/chess-themes/pieces/merida/${piece}.png`;
+    }
 
     let game = new Chess();
     let selected = null;
@@ -86,9 +92,11 @@
           div.className = 'square ' + (((fileIndex + rank) % 2 === 0) ? 'light' : 'dark');
           div.dataset.square = sq;
           if(pieceObj){
-            const glyph = glyphs[pieceObj.type][pieceObj.color === 'w' ? 'w' : 'b'];
-            div.textContent = glyph;
-            div.setAttribute('aria-label', pieceObj.color + ' ' + pieceObj.type + ' on ' + sq);
+            const img = document.createElement('img');
+            img.src = getPieceImageUrl(pieceObj.type, pieceObj.color);
+            img.className = 'piece';
+            img.alt = pieceObj.color + ' ' + pieceObj.type;
+            div.appendChild(img);
           }
           div.addEventListener('click', onSquareClick);
           boardEl.appendChild(div);
